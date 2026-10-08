@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style type="text/tailwindcss">
+    @custom-variant dark (&:where(.dark, .dark *));
+    @theme {
+      --font-sans: 'Cairo', system-ui, sans-serif;
+      --color-brand: #567DF4;
+      --color-ink-bg: #1B1C2E;
+      --color-ink-panel: #181829;
+      --color-ink-card: #1E1F33;
+      --color-ink-soft: #1F2035;
+      --color-ink-line: #2A2C42;
+    }
+    @layer components {
+      .card { @apply bg-white dark:bg-ink-card border border-gray-200/60 dark:border-white/[0.06] rounded-xl; }
+      .card-title { @apply text-[11px] font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide; }
+      .nav-item { @apply flex items-center gap-2.5 px-3 py-[7px] text-[13px] rounded-md w-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.04] hover:text-gray-900 dark:hover:text-white transition-colors; }
+      .nav-item.active { @apply bg-brand text-white hover:bg-brand hover:text-white; }
+      .nav-sub { @apply flex items-center gap-2 px-3 ms-2.5 py-[6px] text-[12px] rounded-md w-[calc(100%-0.625rem)] text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-white/[0.04] hover:text-gray-900 dark:hover:text-white; }
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.460.0/dist/umd/lucide.min.js"></script>
+  <script>
+    // Apply saved theme/lang before paint to avoid flicker.
+    (function () {
+      try {
+        const t = localStorage.getItem('admin.theme');
+        if (t === 'light') document.documentElement.classList.remove('dark');
+        const l = localStorage.getItem('admin.lang');
+        if (l === 'ar') { document.documentElement.lang = 'ar'; document.documentElement.dir = 'rtl'; }
+      } catch (e) {}
+    })();
+  </script>
+  <style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { scrollbar-width: none; }
+  </style>
+</head>
+<body class="font-sans antialiased bg-gray-50 dark:bg-ink-bg text-gray-900 dark:text-white">
+  <div class="min-h-screen overflow-x-hidden">
+
+    <!-- Mobile backdrop -->
+    <div id="backdrop" class="fixed inset-0 z-40 bg-black/40 hidden lg:hidden"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar"
+      class="fixed inset-y-0 start-0 z-50 w-64 bg-white dark:bg-ink-panel shadow-lg transition-transform duration-300
+             -translate-x-full rtl:translate-x-full lg:translate-x-0!">
+      <div class="flex flex-col h-full">
+        <div class="flex items-center h-16 border-b border-gray-200 dark:border-ink-line px-3 gap-3">
+          <div class="w-8 h-8 rounded-lg bg-brand flex items-center justify-center text-white font-bold">A</div>
+          <span class="font-semibold text-base whitespace-nowrap" data-i18n="appName">Admin Console</span>
+          <button id="closeSidebar" class="ms-auto lg:hidden p-1.5 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-ink-line">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+
+        <nav id="nav" class="flex-1 px-2 py-4 overflow-y-auto overflow-x-hidden no-scrollbar"></nav>
+
+        <div class="border-t border-gray-200 dark:border-ink-line p-2">
+          <div class="mb-2 p-3 bg-gray-50 dark:bg-ink-soft rounded-lg">
+            <p class="text-sm font-medium truncate" id="adminName"></p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate" id="adminEmail"></p>
+          </div>
+          <button class="flex items-center gap-3 px-4 w-full py-3 text-sm font-medium text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-500/10">
+            <i data-lucide="log-out" class="w-4 h-4"></i><span data-i18n="logout">Logout</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main column -->
+    <div class="lg:ms-64">
+      <header class="sticky top-0 z-30 bg-white/90 dark:bg-ink-panel/90 backdrop-blur border-b border-gray-200 dark:border-ink-line">
+        <div class="px-3 sm:px-4 lg:px-5 flex items-center justify-between h-12 gap-2">
+          <button id="openSidebar" class="lg:hidden p-1.5 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-ink-line" aria-label="Menu">
+            <i data-lucide="menu" class="w-5 h-5"></i>
+          </button>
+          <div class="flex-1 text-[12px] text-gray-500 dark:text-gray-400">
+            <span data-i18n="welcome">Welcome</span>,
+            <span class="font-medium text-gray-700 dark:text-gray-200" id="welcomeName"></span>
+          </div>
+          <div class="hidden sm:flex items-center gap-2 px-2.5 h-8 rounded-lg bg-gray-100 dark:bg-ink-soft text-gray-400 w-56">
+            <i data-lucide="search" class="w-3.5 h-3.5"></i>
+            <input id="search" class="bg-transparent outline-none text-[12px] flex-1 text-gray-700 dark:text-gray-200 placeholder:text-gray-400" data-i18n-ph="search" placeholder="Search…" />
+            <kbd class="text-[10px] text-gray-400">/</kbd>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <button id="langBtn" class="flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-ink-soft">
+              <i data-lucide="languages" class="w-3.5 h-3.5"></i><span id="langLabel">EN</span>
+            </button>
+            <button id="themeBtn" class="p-2 rounded-lg bg-gray-100 dark:bg-ink-soft hover:bg-gray-200 dark:hover:bg-ink-line" aria-label="Toggle theme">
+              <i data-lucide="sun" class="w-4 h-4 hidden dark:block"></i>
+              <i data-lucide="moon" class="w-4 h-4 block dark:hidden"></i>
+            </button>
+            <button class="relative p-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white" aria-label="Notifications">
+              <i data-lucide="bell" class="w-4 h-4"></i>
+              <span class="absolute top-1 end-1 w-2 h-2 rounded-full bg-emerald-500"></span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <main class="p-3 sm:p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h1 class="text-lg font-semibold" data-i18n="overview">Overview</h1>
+            <p class="text-xs text-gray-400 dark:text-gray-500" data-i18n="overviewSub">Dashboard &amp; KPIs</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] text-gray-400" id="updatedAt"></span>
+            <button id="refreshBtn" class="p-2 rounded-lg text-gray-400 hover:text-brand hover:bg-brand/10" aria-label="Refresh">
+              <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- KPI row -->
+        <section id="kpis" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2"></section>
+
+        <!-- Performance / status / hourly -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-2">
+          <div class="card p-4">
+            <h3 class="card-title mb-4" data-i18n="perf30">Performance (30d)</h3>
+            <div id="rings" class="flex items-center justify-around"></div>
+          </div>
+          <div class="card p-4">
+            <h3 class="card-title mb-3" data-i18n="status30">Ride Status (30d)</h3>
+            <div id="statusBars" class="space-y-2"></div>
+          </div>
+          <div class="card p-4">
+            <h3 class="card-title mb-3" data-i18n="hourly">Today's Hourly Rides</h3>
+            <div id="hourly" class="flex items-end gap-[3px] h-24"></div>
+            <div class="flex justify-between mt-1.5 text-[8px] text-gray-400">
+              <span>0</span><span>4</span><span>8</span><span>12</span><span>16</span><span>20</span><span>23</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Top drivers / summary -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-2">
+          <div class="card p-4 lg:col-span-2">
+            <h3 class="card-title mb-2" data-i18n="topDrivers">Top Drivers (this week)</h3>
+            <div id="topDrivers" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5"></div>
+          </div>
+          <div class="card p-4">
+            <h3 class="card-title mb-3" data-i18n="summary">Quick Summary</h3>
+            <div id="summary" class="space-y-2.5"></div>
+          </div>
+        </section>
+
+        <!-- Recent rides / users -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-2">
+          <div class="card p-4 lg:col-span-2">
+            <div class="flex items-center justify-between mb-2">
+              <h3 class="card-title" data-i18n="recentRides">Recent Rides</h3>
+              <div id="rideFilter" class="flex gap-1 text-[10px]"></div>
+            </div>
+            <div id="recentRides" class="divide-y divide-gray-100 dark:divide-white/[0.05]"></div>
+          </div>
+          <div class="card p-4">
+            <h3 class="card-title mb-2" data-i18n="recentUsers">Recent Users</h3>
+            <div id="recentUsers" class="space-y-1"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
