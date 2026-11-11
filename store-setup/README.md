@@ -4,6 +4,8 @@ An interactive guide for opening a **Google Play Console** account and an **Appl
 
 There is no build step: open `index.html` in a browser.
 
+![Setup assistant and plan](preview.png)
+
 ## How it works
 
 - **Setup assistant (chat):** asks a few questions: company or personal, D-U-N-S number, website and domain email, Android phone, Mac, in-app payments. It replies to each answer with what it means for you. Tap **Change** under any answer to redo it from there.
